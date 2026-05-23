@@ -7,13 +7,43 @@ const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500'
 
 
 let allMovies = []
+let currentView = 'all' 
 let currentFilters = {
   search: '',
   sort: 'popularity',
   minRating: 0
 }
 
+// === LocalStorage helpers ===
+const STORAGE_KEY = 'movieDiscoveryFavorites'
 
+function getFavorites() {
+  const stored = localStorage.getItem(STORAGE_KEY)
+  return stored ? JSON.parse(stored) : []
+}
+
+function saveFavorites(favorites) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites))
+}
+
+function isFavorite(movieId) {
+  return getFavorites().some(movie => movie.id === movieId)
+}
+
+function toggleFavorite(movie) {
+  const favorites = getFavorites()
+  const exists = favorites.find(m => m.id === movie.id)
+
+  if (exists) {
+    const updated = favorites.filter(m => m.id !== movie.id)
+    saveFavorites(updated)
+  } else {
+    favorites.push(movie)
+    saveFavorites(favorites)
+  }
+}
+
+// === API calls ===
 async function fetchPopularMovies(totalMovies = 30) {
   try {
     const pagesNeeded = Math.ceil(totalMovies / 20)
@@ -39,42 +69,54 @@ async function fetchPopularMovies(totalMovies = 30) {
   }
 }
 
+async function fetchMovieDetails(movieId) {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/movie/${movieId}?api_key=${API_KEY}&language=en-US&append_to_response=credits,videos`
+    )
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+    return await response.json()
+  } catch (error) {
+    console.error('Fout bij ophalen details:', error)
+    return null
+  }
+}
 
+// === Filtering ===
 function getFilteredMovies() {
-  
-  let result = allMovies.filter(movie =>
+  // Bepaal welke lijst we filteren (alle films of favorieten)
+  const sourceList = currentView === 'favorites' ? getFavorites() : allMovies
+
+  let result = sourceList.filter(movie =>
     movie.title.toLowerCase().includes(currentFilters.search.toLowerCase())
   )
 
-  
   result = result.filter(movie => movie.vote_average >= currentFilters.minRating)
 
- 
   result.sort((a, b) => {
-    if (currentFilters.sort === 'title') {
-      return a.title.localeCompare(b.title)
-    } else if (currentFilters.sort === 'rating') {
-      return b.vote_average - a.vote_average
-    } else if (currentFilters.sort === 'date') {
-      return new Date(b.release_date) - new Date(a.release_date)
-    }
-    
+    if (currentFilters.sort === 'title') return a.title.localeCompare(b.title)
+    if (currentFilters.sort === 'rating') return b.vote_average - a.vote_average
+    if (currentFilters.sort === 'date') return new Date(b.release_date) - new Date(a.release_date)
     return b.popularity - a.popularity
   })
 
   return result
 }
 
-
+// === Rendering ===
 const createMovieCard = (movie) => {
   const posterUrl = movie.poster_path
     ? `${IMAGE_BASE_URL}${movie.poster_path}`
     : 'https://placehold.co/500x750?text=No+Poster'
   const year = movie.release_date ? movie.release_date.substring(0, 4) : 'N/A'
   const rating = movie.vote_average.toFixed(1)
+  const favClass = isFavorite(movie.id) ? 'is-favorite' : ''
 
   return `
-    <article class="movie-card">
+    <article class="movie-card ${favClass}" data-movie-id="${movie.id}">
+      <button class="fav-btn" data-movie-id="${movie.id}" title="Toevoegen aan favorieten">
+        ${isFavorite(movie.id) ? '❤️' : '🤍'}
+      </button>
       <img src="${posterUrl}" alt="${movie.title}" class="movie-poster" />
       <div class="movie-info">
         <h3 class="movie-title">${movie.title}</h3>
@@ -96,52 +138,164 @@ function renderMovies() {
   counter.textContent = `${filtered.length} film${filtered.length !== 1 ? 's' : ''} gevonden`
 
   if (filtered.length === 0) {
-    grid.innerHTML = '<p class="empty">Geen films gevonden met deze filters.</p>'
+    const emptyMessage = currentView === 'favorites'
+      ? 'Je hebt nog geen favorieten. Klik op het hartje bij een film om hem toe te voegen!'
+      : 'Geen films gevonden met deze filters.'
+    grid.innerHTML = `<p class="empty">${emptyMessage}</p>`
     return
   }
 
   grid.innerHTML = filtered.map(createMovieCard).join('')
 }
 
+// === Modal voor details ===
+async function openMovieModal(movieId) {
+  const modal = document.querySelector('#movie-modal')
+  const modalContent = document.querySelector('#modal-content')
 
+  modal.classList.add('open')
+  modalContent.innerHTML = '<p class="loading">Details laden...</p>'
+
+  const details = await fetchMovieDetails(movieId)
+
+  if (!details) {
+    modalContent.innerHTML = '<p class="error">Kon details niet ophalen.</p>'
+    return
+  }
+
+  const posterUrl = details.poster_path
+    ? `${IMAGE_BASE_URL}${details.poster_path}`
+    : 'https://placehold.co/500x750?text=No+Poster'
+
+  const genres = details.genres.map(g => g.name).join(', ') || 'Onbekend'
+  const runtime = details.runtime ? `${details.runtime} min` : 'Onbekend'
+  const cast = details.credits?.cast?.slice(0, 5).map(c => c.name).join(', ') || 'Onbekend'
+  const trailer = details.videos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube')
+  const favText = isFavorite(details.id) ? '❤️ Verwijder uit favorieten' : '🤍 Voeg toe aan favorieten'
+
+  modalContent.innerHTML = `
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-grid">
+      <img src="${posterUrl}" alt="${details.title}" class="modal-poster" />
+      <div class="modal-info">
+        <h2>${details.title}</h2>
+        <p class="modal-tagline">${details.tagline || ''}</p>
+        <div class="modal-stats">
+          <span>📅 ${details.release_date || 'N/A'}</span>
+          <span>⭐ ${details.vote_average.toFixed(1)}</span>
+          <span>⏱ ${runtime}</span>
+        </div>
+        <p class="modal-genres"><strong>Genres:</strong> ${genres}</p>
+        <p class="modal-cast"><strong>Cast:</strong> ${cast}</p>
+        <p class="modal-overview">${details.overview || 'Geen beschrijving beschikbaar.'}</p>
+        <div class="modal-actions">
+          <button class="fav-btn-big" data-movie-id="${details.id}">${favText}</button>
+          ${trailer ? `<a href="https://www.youtube.com/watch?v=${trailer.key}" target="_blank" class="trailer-btn">▶ Trailer</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `
+
+  // Sluit-knop event
+  document.querySelector('#modal-close').addEventListener('click', closeMovieModal)
+
+  // Favoriet-knop event in modal
+  document.querySelector('.fav-btn-big').addEventListener('click', () => {
+    toggleFavorite({
+      id: details.id,
+      title: details.title,
+      poster_path: details.poster_path,
+      release_date: details.release_date,
+      vote_average: details.vote_average,
+      overview: details.overview,
+      popularity: details.popularity
+    })
+    openMovieModal(movieId) // herlaad modal om knop te updaten
+    renderMovies() // herlaad grid voor hartjes
+  })
+}
+
+function closeMovieModal() {
+  document.querySelector('#movie-modal').classList.remove('open')
+}
+
+// === Event handlers ===
 function setupEventListeners() {
-  
-  const searchInput = document.querySelector('#search-input')
-  searchInput.addEventListener('input', (event) => {
+  // Zoekbalk
+  document.querySelector('#search-input').addEventListener('input', (event) => {
     currentFilters.search = event.target.value
     renderMovies()
   })
 
-  
-  const sortSelect = document.querySelector('#sort-select')
-  sortSelect.addEventListener('change', (event) => {
+  // Sorteer dropdown
+  document.querySelector('#sort-select').addEventListener('change', (event) => {
     currentFilters.sort = event.target.value
     renderMovies()
   })
 
-  
+  // Rating slider
   const ratingSlider = document.querySelector('#rating-slider')
   const ratingValue = document.querySelector('#rating-value')
   ratingSlider.addEventListener('input', (event) => {
-    const value = parseFloat(event.target.value)
-    currentFilters.minRating = value
-    ratingValue.textContent = value.toFixed(1)
+    currentFilters.minRating = parseFloat(event.target.value)
+    ratingValue.textContent = currentFilters.minRating.toFixed(1)
     renderMovies()
   })
 
-  
-  const resetBtn = document.querySelector('#reset-filters')
-  resetBtn.addEventListener('click', () => {
+  // Reset filters
+  document.querySelector('#reset-filters').addEventListener('click', () => {
     currentFilters = { search: '', sort: 'popularity', minRating: 0 }
-    searchInput.value = ''
-    sortSelect.value = 'popularity'
+    document.querySelector('#search-input').value = ''
+    document.querySelector('#sort-select').value = 'popularity'
     ratingSlider.value = 0
     ratingValue.textContent = '0.0'
     renderMovies()
   })
+
+  // Tabs (Alle films / Favorieten)
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      currentView = btn.dataset.view
+      renderMovies()
+    })
+  })
+
+  // Klik op grid (event delegation voor cards en favoriet-knoppen)
+  document.querySelector('#movies-grid').addEventListener('click', (event) => {
+    const favBtn = event.target.closest('.fav-btn')
+    const card = event.target.closest('.movie-card')
+
+    if (favBtn) {
+      event.stopPropagation() // voorkom dat de modal opent
+      const movieId = parseInt(favBtn.dataset.movieId)
+      const movie = allMovies.find(m => m.id === movieId) || getFavorites().find(m => m.id === movieId)
+      if (movie) {
+        toggleFavorite(movie)
+        renderMovies()
+      }
+      return
+    }
+
+    if (card) {
+      const movieId = parseInt(card.dataset.movieId)
+      openMovieModal(movieId)
+    }
+  })
+
+  // Modal sluiten bij klik op overlay
+  document.querySelector('#movie-modal').addEventListener('click', (event) => {
+    if (event.target.id === 'movie-modal') closeMovieModal()
+  })
+
+  // ESC-toets sluit modal
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeMovieModal()
+  })
 }
 
-
+// === Init ===
 async function init() {
   const app = document.querySelector('#app')
   app.innerHTML = `
@@ -150,12 +304,16 @@ async function init() {
       <p class="subtitle">Verken de populairste films van het moment</p>
     </header>
 
+    <nav class="tabs">
+      <button class="tab-btn active" data-view="all">Alle films</button>
+      <button class="tab-btn" data-view="favorites">❤️ Favorieten</button>
+    </nav>
+
     <section class="controls">
       <div class="control-group search-group">
         <label for="search-input">Zoeken</label>
         <input type="search" id="search-input" placeholder="Zoek een film op titel..." />
       </div>
-
       <div class="control-group">
         <label for="sort-select">Sorteer op</label>
         <select id="sort-select">
@@ -165,12 +323,10 @@ async function init() {
           <option value="date">Releasedatum (nieuwste eerst)</option>
         </select>
       </div>
-
       <div class="control-group">
         <label for="rating-slider">Min. rating: <span id="rating-value">0.0</span></label>
         <input type="range" id="rating-slider" min="0" max="10" step="0.5" value="0" />
       </div>
-
       <button id="reset-filters" class="reset-btn">Reset filters</button>
     </section>
 
@@ -181,6 +337,10 @@ async function init() {
         <p class="loading">Films laden...</p>
       </div>
     </main>
+
+    <div id="movie-modal" class="modal">
+      <div id="modal-content" class="modal-content"></div>
+    </div>
   `
 
   allMovies = await fetchPopularMovies(30)
