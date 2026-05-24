@@ -56,4 +56,4 @@ Tijdens dit project werd Claude ingezet als hulpmiddel voor:
 - Final check tegen rubriek
 
 ## Volledige chat
-De volledige conversatie is beschikbaar via mijn Claude-account. Een gedetailleerde transcript kan op aanvraag worden gedeeld via mijn schoolemail.
+link: https://claude.ai/share/05d0da37-d4fb-4a07-8e1c-55ca99a9fbcf
