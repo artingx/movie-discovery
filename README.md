@@ -2,7 +2,7 @@
 
 Een interactieve Single Page Application gebouwd voor het vak **Web Advanced**. Deze applicatie laat gebruikers de populairste films verkennen via de TMDB API, met filteren, zoeken, sorteren en het opslaan van favorieten.
 
-🔗 **Live demo:** [coming soon — Vercel link hier]
+🔗 **Live demo:** https://movie-discovery-sepia.vercel.app/
 📂 **GitHub:** https://github.com/artingx/movie-discovery
 
 ---
