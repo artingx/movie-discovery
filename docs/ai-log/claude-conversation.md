@@ -20,7 +20,7 @@ Tijdens dit project werd Claude ingezet als hulpmiddel voor:
 
 ## Onderwerpen per sessie
 
-### Sessie 1 — Projectopzet (16 mei)
+### Sessie 1 — Projectopzet (22 mei)
 - API-keuze: vergelijking tussen TMDB, Brussel Open Data, PokéAPI
 - TMDB API-key aanvragen
 - Vite project opzetten met Vanilla JavaScript
@@ -28,14 +28,14 @@ Tijdens dit project werd Claude ingezet als hulpmiddel voor:
 - Eerste API-call naar `/movie/popular` endpoint
 - Film-grid met posters en CSS Grid layout
 
-### Sessie 2 — Interactiviteit
+### Sessie 2 — Interactiviteit (22 mei)
 - Zoekbalk met live filtering op titel
 - Sorteer-dropdown (4 manieren)
 - Rating-slider met `input` event
 - Filter-logica met chained `.filter()` en `.sort()`
 - Reset-knop voor alle filters
 
-### Sessie 3 — Details + favorieten
+### Sessie 3 — Details + favorieten (23 mei)
 - Modal-pattern voor detail-weergave
 - Tweede API-call met `append_to_response` voor cast en videos
 - LocalStorage-helpers (`getFavorites`, `saveFavorites`)
@@ -43,17 +43,17 @@ Tijdens dit project werd Claude ingezet als hulpmiddel voor:
 - Event delegation op de grid-container
 - ESC-toets om modal te sluiten
 
-### Sessie 4 — Afwerking
+### Sessie 4 — Afwerking (23 - 24 mei)
 - Theme switcher met `data-theme` attribuut en CSS variables
 - IntersectionObserver voor fade-in animatie van cards
 - Formulier-validatie met regex (email) en minimum-lengtes
 - README structureren
 
-### Sessie 5 — Deployment + documentatie
+### Sessie 5 — Deployment + documentatie (24 mei)
 - Vercel deployment met environment variable
 - README finetuning met locatie van elk concept
 - AI-log opstellen
 - Final check tegen rubriek
 
 ## Volledige chat
-De volledige conversatie is beschikbaar via mijn Claude-account. Een gedetailleerde transcript kan op aanvraag worden gedeeld via mijn schoolemail.
+link: https://claude.ai/share/05d0da37-d4fb-4a07-8e1c-55ca99a9fbcf
