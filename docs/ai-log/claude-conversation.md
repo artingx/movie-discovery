@@ -1,24 +1,59 @@
 # AI Chatlog
 
 ## Tool gebruikt
-- Claude (Anthropic) — Claude.ai
+- **Claude (Anthropic)** — via claude.ai
+- Model: Claude Opus 4.7
 
-## Doel
-Hulp bij planning, code-uitleg, debugging, en het structureren van het project.
+## Doel van AI-gebruik
+Tijdens dit project werd Claude ingezet als hulpmiddel voor:
+- **Planning**: opstellen van een tijdsplanning en feature-prioritering
+- **Conceptuele uitleg**: vragen over Observer API, async/await, LocalStorage-patronen, event delegation
+- **Code-suggesties**: opvragen van voorbeeldstructuren voor bv. de modal en het filtersysteem
+- **Debugging**: hulp bij foutmeldingen tijdens Vite-setup en Git-push problemen
+- **Documentatie**: opzet van de README-structuur
 
-## Conversaties
+## Belangrijke principes
+- Alle code werd zelf nagelezen voor het werd toegevoegd
+- Concepten die ik niet begreep heb ik teruggevraagd in mijn eigen woorden
+- Code werd waar nodig aangepast om bij de rest van het project te passen
+- AI werd **niet** gebruikt om de opdracht volledig te laten genereren
 
-### Sessie 1: Projectopzet en eerste features
-**Datum:** 22/05/2026
-**Onderwerpen:** API-keuze (TMDB), Vite setup, GitHub repo, eerste API-call, grid weergave
+## Onderwerpen per sessie
 
-### Sessie 2: Interactiviteit
-**Datum:** 23/05/2026
-**Onderwerpen:** Zoeken, sorteren, filteren, detail-modal, favorieten met LocalStorage
+### Sessie 1 — Projectopzet (16 mei)
+- API-keuze: vergelijking tussen TMDB, Brussel Open Data, PokéAPI
+- TMDB API-key aanvragen
+- Vite project opzetten met Vanilla JavaScript
+- GitHub-repo aanmaken en eerste commit
+- Eerste API-call naar `/movie/popular` endpoint
+- Film-grid met posters en CSS Grid layout
 
-### Sessie 3: Afwerking
-**Datum:** 24/05/2026
-**Onderwerpen:** Theme switcher, Observer API, formulier validatie, README
+### Sessie 2 — Interactiviteit
+- Zoekbalk met live filtering op titel
+- Sorteer-dropdown (4 manieren)
+- Rating-slider met `input` event
+- Filter-logica met chained `.filter()` en `.sort()`
+- Reset-knop voor alle filters
+
+### Sessie 3 — Details + favorieten
+- Modal-pattern voor detail-weergave
+- Tweede API-call met `append_to_response` voor cast en videos
+- LocalStorage-helpers (`getFavorites`, `saveFavorites`)
+- Tabs voor "Alle films" vs "Favorieten"
+- Event delegation op de grid-container
+- ESC-toets om modal te sluiten
+
+### Sessie 4 — Afwerking
+- Theme switcher met `data-theme` attribuut en CSS variables
+- IntersectionObserver voor fade-in animatie van cards
+- Formulier-validatie met regex (email) en minimum-lengtes
+- README structureren
+
+### Sessie 5 — Deployment + documentatie
+- Vercel deployment met environment variable
+- README finetuning met locatie van elk concept
+- AI-log opstellen
+- Final check tegen rubriek
 
 ## Volledige chat
-[Plak hier de export of link naar de chat]
+De volledige conversatie is beschikbaar via mijn Claude-account. Een gedetailleerde transcript kan op aanvraag worden gedeeld via mijn schoolemail.

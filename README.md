@@ -113,96 +113,49 @@ movie-discovery/
 Hieronder een overzicht van waar elk vereiste concept in de code terug te vinden is.
 
 ### DOM manipulatie
-| Concept | Bestand | Regels |
+| Concept | Bestand | Locatie in code |
 |---|---|---|
-| Elementen selecteren (`querySelector`) | `src/main.js` | overal — bv. regel 207, 213 |
-| Elementen manipuleren (`innerHTML`, `textContent`, `classList`) | `src/main.js` | bv. regel 200, 270, 280 |
-| Events aan elementen koppelen (`addEventListener`) | `src/main.js` | functie `setupEventListeners` — regel 285+ |
+| Elementen selecteren (`querySelector`, `querySelectorAll`) | `src/main.js` | overal — bv. functie `renderMovies()` en `setupEventListeners()` |
+| Elementen manipuleren (`innerHTML`, `textContent`, `classList`) | `src/main.js` | functies `init()`, `renderMovies()`, `openMovieModal()` |
+| Events aan elementen koppelen (`addEventListener`) | `src/main.js` | functie `setupEventListeners()` |
 
 ### Modern JavaScript
-| Concept | Voorbeeld | Regel |
+| Concept | Bestand | Locatie in code |
 |---|---|---|
-| Constanten (`const`) | `const API_KEY = ...` | regel 4 |
-| Template literals | `` `${API_BASE_URL}/movie/popular?api_key=${API_KEY}...` `` | regel 65 |
-| Iteratie (`for`, `forEach`) | `for (let page = 1; ...)` | regel 63 |
-| Array methods (`.filter`, `.map`, `.sort`, `.find`, `.some`) | bv. `result.filter(...)` | regel 87 |
-| Arrow functions | `const createMovieCard = (movie) => {...}` | regel 110 |
-| Ternary operator | `movie.poster_path ? ... : ...` | regel 112 |
-| Callback functions | `(event) => { currentFilters.search = ... }` | regel 286 |
-| Promises (`.then` impliciet via async) | in `fetchPopularMovies` | regel 56 |
-| Async / await | `async function fetchPopularMovies()` | regel 56 |
-| Observer API | `IntersectionObserver` in `observeCards` | regel 135 |
+| Constanten (`const`) | `src/main.js` | bovenaan bestand (`API_KEY`, `API_BASE_URL`, `IMAGE_BASE_URL`, `STORAGE_KEY`, `THEME_KEY`) |
+| Template literals | `src/main.js` | functie `createMovieCard()` en API-URLs in `fetchPopularMovies()` |
+| Iteratie over arrays (`for`, `forEach`) | `src/main.js` | `for`-loop in `fetchPopularMovies()`, `forEach` in `setupEventListeners()` en `observeCards()` |
+| Array methods (`.filter`, `.map`, `.sort`, `.find`, `.some`, `.slice`, `.push`) | `src/main.js` | functies `getFilteredMovies()` en `toggleFavorite()` |
+| Arrow functions | `src/main.js` | `createMovieCard = (movie) => {...}` en alle event handlers |
+| Ternary operator (`? :`) | `src/main.js` | functie `createMovieCard()` (poster-fallback) en `toggleTheme()` |
+| Callback functions | `src/main.js` | callbacks doorgegeven aan `addEventListener` in `setupEventListeners()` |
+| Promises | `src/main.js` | impliciet via `async` functies — `fetchPopularMovies()` en `fetchMovieDetails()` geven Promises terug |
+| Async / await | `src/main.js` | `async function fetchPopularMovies()`, `async function fetchMovieDetails()`, `async function init()`, `async function openMovieModal()` |
+| Observer API | `src/main.js` | `IntersectionObserver` in functie `observeCards()` (fade-in animatie van cards) |
 
 ### Data & API
 | Concept | Locatie |
 |---|---|
-| Fetch | `fetchPopularMovies()` en `fetchMovieDetails()` |
-| JSON parsen | `response.json()` |
-| JSON weergeven | `createMovieCard()` rendert objecten naar HTML |
+| Fetch | functies `fetchPopularMovies()` en `fetchMovieDetails()` in `src/main.js` |
+| JSON parsen | `await response.json()` in beide fetch-functies |
+| JSON weergeven | `createMovieCard()` rendert film-objecten naar HTML |
 
 ### Opslag & validatie
 | Concept | Locatie |
 |---|---|
-| LocalStorage | `getFavorites()`, `saveFavorites()`, `getTheme()`, `setTheme()` |
-| Formulier validatie | `validateSuggestionForm()` met regex voor email + lengte-checks |
+| LocalStorage | functies `getFavorites()`, `saveFavorites()`, `getTheme()`, `setTheme()` in `src/main.js` |
+| Formulier validatie | functie `validateSuggestionForm()` in `src/main.js` (regex voor email + minimum lengte) |
 
 ### Styling & layout
 | Concept | Locatie |
 |---|---|
-| HTML layout (CSS Grid + Flexbox) | `src/style.css` — `.movies-grid`, `.controls`, `.modal-grid` |
-| Responsive | `@media` queries onderaan `src/style.css` |
-| Gebruiksvriendelijke elementen | Hartje-knoppen, reset-knop, close-knop, icoontjes |
+| HTML layout (CSS Grid + Flexbox) | `src/style.css` — selectors `.movies-grid`, `.controls`, `.modal-grid`, `.tabs` |
+| Responsive design | `src/style.css` — `@media` queries onderaan |
+| Gebruiksvriendelijke elementen | Hartje-knoppen (`fav-btn`), reset-knop, close-knop (`modal-close`), icoontjes (☀️ 🌙 ❤️ ⭐) |
 
 ### Tooling & structuur
 - Project opgezet met **Vite**
-- Gescheiden `src/` (code), `public/` (assets), `docs/` (documentatie)
-- Build: `npm run build` produceert `dist/` folder
-- Meerdere commits per onderdeel en per dag (zie GitHub history)
-
----
-
-## 📸 Screenshots
-
-### Hoofdpagina (dark mode)
-![Home dark mode](docs/screenshots/1-home-dark.png)
-
-### Light mode
-![Light mode](docs/screenshots/2-home-light.png)
-
-### Detail-modal
-![Movie details](docs/screenshots/3-film-detail.png)
-
-### Favorieten
-![Favorites tab](docs/screenshots/4-favorites.png)
-
-### Formulier validatie
-![Form validation](docs/screenshots/5-form-validation.png)
-
----
-
-## 📚 Bronnen
-
-- **TMDB API documentation**: https://developer.themoviedb.org/docs
-- **Vite documentation**: https://vitejs.dev/guide/
-- **MDN — IntersectionObserver**: https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-- **MDN — LocalStorage**: https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
-- **MDN — Fetch API**: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
-- **CSS Grid Layout**: https://css-tricks.com/snippets/css/complete-guide-grid/
-
----
-
-## 🤖 AI-log
-
-Voor de ontwikkeling van dit project werd **Claude (Anthropic)** ingezet als hulpmiddel voor planning, uitleg van concepten, en het debuggen van code. De volledige chatlog is terug te vinden in `docs/ai-log/claude-conversation.md`.
-
-Belangrijke punten:
-- Alle code werd zelf nagelezen en aangepast waar nodig
-- AI werd gebruikt als sparring-partner, niet als kant-en-klare oplossing
-- Conceptuele uitleg werd gevraagd voor o.a. Observer API en LocalStorage-patronen
-
----
-
-## 👤 Auteur
-
-**Artin** — student Web Advanced @ Erasmushogeschool Brussel
-GitHub: [@artingx](https://github.com/artingx)
+- Gescheiden mappen: `src/` (code), `public/` (statische assets), `docs/` (documentatie + screenshots)
+- Build-output: `npm run build` produceert `dist/` folder
+- Meerdere commits per onderdeel en per dag (zie GitHub commit history)
+- Live deployment via **Vercel** met environment variable voor API-key
