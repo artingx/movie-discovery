@@ -57,3 +57,4 @@ Tijdens dit project werd Claude ingezet als hulpmiddel voor:
 
 ## Volledige chat
 link: https://claude.ai/share/05d0da37-d4fb-4a07-8e1c-55ca99a9fbcf
+ 

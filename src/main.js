@@ -119,6 +119,8 @@ const createMovieCard = (movie) => {
   const year = movie.release_date ? movie.release_date.substring(0, 4) : 'N/A'
   const rating = movie.vote_average.toFixed(1)
   const favClass = isFavorite(movie.id) ? 'is-favorite' : ''
+  const language = movie.original_language ? movie.original_language.toUpperCase() : 'N/A'
+  const voteCount = movie.vote_count ? movie.vote_count.toLocaleString() : '0'
 
   return `
     <article class="movie-card ${favClass}" data-movie-id="${movie.id}">
@@ -129,14 +131,19 @@ const createMovieCard = (movie) => {
       <div class="movie-info">
         <h3 class="movie-title">${movie.title}</h3>
         <div class="movie-meta">
-          <span class="movie-year">${year}</span>
+          <span class="movie-year">📅 ${year}</span>
           <span class="movie-rating">⭐ ${rating}</span>
+        </div>
+        <div class="movie-meta-secondary">
+          <span class="movie-language">🌐 ${language}</span>
+          <span class="movie-votes">👥 ${voteCount}</span>
         </div>
         <p class="movie-overview">${movie.overview || 'Geen beschrijving beschikbaar.'}</p>
       </div>
     </article>
   `
 }
+
 
 // === Observer API: fade-in cards als ze in beeld komen ===
 function observeCards() {

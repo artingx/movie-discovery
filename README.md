@@ -208,3 +208,4 @@ Voor de ontwikkeling van dit project werd **Claude (Anthropic, Claude Opus 4.7)*
 
 **Artin Ghandfatehi** — student Web Advanced @ Erasmushogeschool Brussel  
 GitHub: [@artingx](https://github.com/artingx)
+
