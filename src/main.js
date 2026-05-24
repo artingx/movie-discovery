@@ -1,13 +1,13 @@
 import './style.css'
 
-
+// === API configuratie ===
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
 const API_BASE_URL = 'https://api.themoviedb.org/3'
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500'
 
-
+// === Globale state ===
 let allMovies = []
-let currentView = 'all' 
+let currentView = 'all'
 let currentFilters = {
   search: '',
   sort: 'popularity',
@@ -16,6 +16,7 @@ let currentFilters = {
 
 // === LocalStorage helpers ===
 const STORAGE_KEY = 'movieDiscoveryFavorites'
+const THEME_KEY = 'movieDiscoveryTheme'
 
 function getFavorites() {
   const stored = localStorage.getItem(STORAGE_KEY)
@@ -33,14 +34,29 @@ function isFavorite(movieId) {
 function toggleFavorite(movie) {
   const favorites = getFavorites()
   const exists = favorites.find(m => m.id === movie.id)
-
   if (exists) {
-    const updated = favorites.filter(m => m.id !== movie.id)
-    saveFavorites(updated)
+    saveFavorites(favorites.filter(m => m.id !== movie.id))
   } else {
     favorites.push(movie)
     saveFavorites(favorites)
   }
+}
+
+// === Theme switcher ===
+function getTheme() {
+  return localStorage.getItem(THEME_KEY) || 'dark'
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem(THEME_KEY, theme)
+  const btn = document.querySelector('#theme-toggle')
+  if (btn) btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark'
+}
+
+function toggleTheme() {
+  const current = getTheme()
+  setTheme(current === 'dark' ? 'light' : 'dark')
 }
 
 // === API calls ===
@@ -48,20 +64,14 @@ async function fetchPopularMovies(totalMovies = 30) {
   try {
     const pagesNeeded = Math.ceil(totalMovies / 20)
     const allFetched = []
-
     for (let page = 1; page <= pagesNeeded; page++) {
       const response = await fetch(
         `${API_BASE_URL}/movie/popular?api_key=${API_KEY}&language=en-US&page=${page}`
       )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`)
-      }
-
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
       const data = await response.json()
       allFetched.push(...data.results)
     }
-
     return allFetched.slice(0, totalMovies)
   } catch (error) {
     console.error('Fout bij ophalen films:', error)
@@ -84,13 +94,11 @@ async function fetchMovieDetails(movieId) {
 
 // === Filtering ===
 function getFilteredMovies() {
-  // Bepaal welke lijst we filteren (alle films of favorieten)
   const sourceList = currentView === 'favorites' ? getFavorites() : allMovies
 
   let result = sourceList.filter(movie =>
     movie.title.toLowerCase().includes(currentFilters.search.toLowerCase())
   )
-
   result = result.filter(movie => movie.vote_average >= currentFilters.minRating)
 
   result.sort((a, b) => {
@@ -130,6 +138,22 @@ const createMovieCard = (movie) => {
   `
 }
 
+// === Observer API: fade-in cards als ze in beeld komen ===
+function observeCards() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+        observer.unobserve(entry.target)
+      }
+    })
+  }, { threshold: 0.1 })
+
+  document.querySelectorAll('.movie-card').forEach(card => {
+    observer.observe(card)
+  })
+}
+
 function renderMovies() {
   const grid = document.querySelector('#movies-grid')
   const filtered = getFilteredMovies()
@@ -146,6 +170,7 @@ function renderMovies() {
   }
 
   grid.innerHTML = filtered.map(createMovieCard).join('')
+  observeCards()
 }
 
 // === Modal voor details ===
@@ -196,10 +221,7 @@ async function openMovieModal(movieId) {
     </div>
   `
 
-  // Sluit-knop event
   document.querySelector('#modal-close').addEventListener('click', closeMovieModal)
-
-  // Favoriet-knop event in modal
   document.querySelector('.fav-btn-big').addEventListener('click', () => {
     toggleFavorite({
       id: details.id,
@@ -210,8 +232,8 @@ async function openMovieModal(movieId) {
       overview: details.overview,
       popularity: details.popularity
     })
-    openMovieModal(movieId) // herlaad modal om knop te updaten
-    renderMovies() // herlaad grid voor hartjes
+    openMovieModal(movieId)
+    renderMovies()
   })
 }
 
@@ -219,21 +241,65 @@ function closeMovieModal() {
   document.querySelector('#movie-modal').classList.remove('open')
 }
 
+// === Suggestion form validation ===
+function validateSuggestionForm() {
+  const name = document.querySelector('#sug-name')
+  const email = document.querySelector('#sug-email')
+  const movie = document.querySelector('#sug-movie')
+  const feedback = document.querySelector('#form-feedback')
+
+  // Reset visuele feedback
+  ;[name, email, movie].forEach(input => input.classList.remove('invalid'))
+  feedback.textContent = ''
+  feedback.className = 'form-feedback'
+
+  const errors = []
+
+  // Naam: minstens 2 karakters
+  if (name.value.trim().length < 2) {
+    errors.push('Naam moet minstens 2 karakters bevatten.')
+    name.classList.add('invalid')
+  }
+
+  // Email: regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email.value.trim())) {
+    errors.push('Geef een geldig email-adres in.')
+    email.classList.add('invalid')
+  }
+
+  // Film: minstens 2 karakters
+  if (movie.value.trim().length < 2) {
+    errors.push('Geef een filmtitel in.')
+    movie.classList.add('invalid')
+  }
+
+  if (errors.length > 0) {
+    feedback.innerHTML = errors.map(e => `• ${e}`).join('<br>')
+    feedback.classList.add('error')
+    return false
+  }
+
+  feedback.textContent = `✓ Bedankt ${name.value.trim()}! We bekijken je suggestie "${movie.value.trim()}".`
+  feedback.classList.add('success')
+  name.value = ''
+  email.value = ''
+  movie.value = ''
+  return true
+}
+
 // === Event handlers ===
 function setupEventListeners() {
-  // Zoekbalk
   document.querySelector('#search-input').addEventListener('input', (event) => {
     currentFilters.search = event.target.value
     renderMovies()
   })
 
-  // Sorteer dropdown
   document.querySelector('#sort-select').addEventListener('change', (event) => {
     currentFilters.sort = event.target.value
     renderMovies()
   })
 
-  // Rating slider
   const ratingSlider = document.querySelector('#rating-slider')
   const ratingValue = document.querySelector('#rating-value')
   ratingSlider.addEventListener('input', (event) => {
@@ -242,7 +308,6 @@ function setupEventListeners() {
     renderMovies()
   })
 
-  // Reset filters
   document.querySelector('#reset-filters').addEventListener('click', () => {
     currentFilters = { search: '', sort: 'popularity', minRating: 0 }
     document.querySelector('#search-input').value = ''
@@ -252,7 +317,6 @@ function setupEventListeners() {
     renderMovies()
   })
 
-  // Tabs (Alle films / Favorieten)
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
@@ -262,13 +326,12 @@ function setupEventListeners() {
     })
   })
 
-  // Klik op grid (event delegation voor cards en favoriet-knoppen)
   document.querySelector('#movies-grid').addEventListener('click', (event) => {
     const favBtn = event.target.closest('.fav-btn')
     const card = event.target.closest('.movie-card')
 
     if (favBtn) {
-      event.stopPropagation() // voorkom dat de modal opent
+      event.stopPropagation()
       const movieId = parseInt(favBtn.dataset.movieId)
       const movie = allMovies.find(m => m.id === movieId) || getFavorites().find(m => m.id === movieId)
       if (movie) {
@@ -284,14 +347,21 @@ function setupEventListeners() {
     }
   })
 
-  // Modal sluiten bij klik op overlay
   document.querySelector('#movie-modal').addEventListener('click', (event) => {
     if (event.target.id === 'movie-modal') closeMovieModal()
   })
 
-  // ESC-toets sluit modal
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeMovieModal()
+  })
+
+  // Theme toggle
+  document.querySelector('#theme-toggle').addEventListener('click', toggleTheme)
+
+  // Suggestion form
+  document.querySelector('#suggestion-form').addEventListener('submit', (event) => {
+    event.preventDefault()
+    validateSuggestionForm()
   })
 }
 
@@ -300,7 +370,10 @@ async function init() {
   const app = document.querySelector('#app')
   app.innerHTML = `
     <header class="header">
-      <h1>🎬 Movie Discovery</h1>
+      <div class="header-top">
+        <h1>🎬 Movie Discovery</h1>
+        <button id="theme-toggle" class="theme-btn">☀️ Light</button>
+      </div>
       <p class="subtitle">Verken de populairste films van het moment</p>
     </header>
 
@@ -338,11 +411,33 @@ async function init() {
       </div>
     </main>
 
+    <section class="suggestion-section">
+      <h2>💡 Suggereer een film</h2>
+      <p class="suggestion-intro">Mis je een film? Laat het ons weten!</p>
+      <form id="suggestion-form" class="suggestion-form" novalidate>
+        <div class="form-row">
+          <label for="sug-name">Naam *</label>
+          <input type="text" id="sug-name" placeholder="Jouw naam" required minlength="2" />
+        </div>
+        <div class="form-row">
+          <label for="sug-email">Email *</label>
+          <input type="email" id="sug-email" placeholder="jouw@email.be" required />
+        </div>
+        <div class="form-row">
+          <label for="sug-movie">Film titel *</label>
+          <input type="text" id="sug-movie" placeholder="Bijv. Inception" required minlength="2" />
+        </div>
+        <button type="submit" class="submit-btn">Verstuur suggestie</button>
+        <p id="form-feedback" class="form-feedback"></p>
+      </form>
+    </section>
+
     <div id="movie-modal" class="modal">
       <div id="modal-content" class="modal-content"></div>
     </div>
   `
 
+  setTheme(getTheme())
   allMovies = await fetchPopularMovies(30)
 
   if (allMovies.length === 0) {
