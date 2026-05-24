@@ -164,19 +164,19 @@ Hieronder een overzicht van waar elk vereiste concept in de code terug te vinden
 ## 📸 Screenshots
 
 ### Hoofdpagina (dark mode)
-![Home dark mode](docs/screenshots/01-home-dark.png)
+![Home dark mode](docs/screenshots/1-home-dark.png)
 
 ### Light mode
-![Light mode](docs/screenshots/02-home-light.png)
+![Light mode](docs/screenshots/2-home-light.png)
 
 ### Detail-modal
-![Movie details](docs/screenshots/03-modal.png)
+![Movie details](docs/screenshots/3-film-detail.png)
 
 ### Favorieten
-![Favorites tab](docs/screenshots/04-favorites.png)
+![Favorites tab](docs/screenshots/4-favorites.png)
 
 ### Formulier validatie
-![Form validation](docs/screenshots/05-form-validation.png)
+![Form validation](docs/screenshots/5-form-validation.png)
 
 ---
 
